@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="768" viewBox="0 0 2048 768">
+  <title>African Diaspora Channels Logo</title>
+  <desc>All-white African Diaspora Channels logo with transparent background.</desc>
+
+  <!-- Broadcast arcs -->
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round">
+    <path d="M302 106 C225 213 225 555 302 662" stroke-width="28"/>
+    <path d="M365 159 C308 252 308 516 365 609" stroke-width="28"/>
+    <path d="M422 222 C384 288 384 480 422 546" stroke-width="28"/>
+  </g>
+
+  <!-- ADC circular mark -->
+  <circle cx="665" cy="384" r="239" fill="none" stroke="#FFFFFF" stroke-width="28"/>
+  <text x="665" y="431"
+        text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="190"
+        font-weight="900"
+        fill="#FFFFFF"
+        letter-spacing="-8">ADC</text>
+
+  <!-- Main name -->
+  <g fill="#FFFFFF"
+     font-family="Arial, Helvetica, sans-serif"
+     font-weight="900"
+     text-anchor="start">
+    <text x="1000" y="292" font-size="184" letter-spacing="-7"
+          textLength="760" lengthAdjust="spacingAndGlyphs">AFRICAN</text>
+    <text x="1000" y="455" font-size="184" letter-spacing="-7"
+          textLength="790" lengthAdjust="spacingAndGlyphs">DIASPORA</text>
+    <text x="1000" y="605" font-size="142" letter-spacing="-5"
+          textLength="700" lengthAdjust="spacingAndGlyphs">CHANNELS</text>
+  </g>
+</svg>
