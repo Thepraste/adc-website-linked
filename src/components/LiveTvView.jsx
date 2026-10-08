@@ -587,7 +587,7 @@ const NIGERIAN_CHANNELS = [
     name: 'Trust Television (Trust TV)',
     shortName: 'Trust TV',
     logoType: 'trust-tv',
-    logoImg: '/images/channels/trusttv.svg',
+    logoImg: '/images/channels/trust-tv.png',
     category: 'Nigeria',
     country: 'Nigeria',
     videoId: 'ilwAJyuS1vE',
