@@ -6,7 +6,7 @@ import {
   ChevronRight,
   Calendar,
 } from 'lucide-react';
-import { getShowEpisodes, allShows } from '../data/episodesData';
+import { getShowEpisodes } from '../data/episodesData';
 import { LiveStreamPlayer } from './LiveStreamPlayer';
 
 export function ShowDetailView({
@@ -23,6 +23,12 @@ export function ShowDetailView({
     const list = getShowEpisodes(show) || [];
     return [...list].sort((a, b) => (b.episodeNumber || 0) - (a.episodeNumber || 0));
   }, [show]);
+
+  const isMorningBrew = Boolean(
+    (show?.title || '').toLowerCase().includes('morning brew') ||
+    (show?.id || '').toLowerCase().includes('morning-brew') ||
+    (show?.category || '').toLowerCase().includes('morning brew')
+  );
 
   // Default active episode: The first one (which is the LATEST episode)
   const [activeEpisode, setActiveEpisode] = useState(null);
@@ -45,11 +51,6 @@ export function ShowDetailView({
       });
     }
   };
-
-  // Other recommended shows
-  const otherShows = useMemo(() => {
-    return allShows.filter((s) => s.id !== show?.id && !s.isChannel && !s.isLive).slice(0, 6);
-  }, [show]);
 
   if (!show) return null;
 
@@ -102,7 +103,7 @@ export function ShowDetailView({
                 <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-2 z-20">
                   <span className="bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded shadow flex items-center gap-1.5 tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    <span>EPISODE {activeEpisode.episodeNumber}</span>
+                    <span>{isMorningBrew ? activeEpisode.title : `EPISODE ${activeEpisode.episodeNumber}`}</span>
                   </span>
                   <span className="bg-black/80 backdrop-blur-md border border-white/20 text-blue-200 text-xs font-bold px-2 py-0.5 rounded shadow">
                     {activeEpisode.duration}
@@ -127,9 +128,9 @@ export function ShowDetailView({
                   <div className="bg-white/5 rounded-xl p-3.5 border border-white/10 space-y-2">
                     <div className="flex items-center justify-between text-xs text-neutral-400 flex-wrap gap-1">
                       <span className="text-[#00a8e1] font-bold">
-                        EPISODE {activeEpisode.episodeNumber}
+                        {isMorningBrew ? activeEpisode.title : `EPISODE ${activeEpisode.episodeNumber}`}
                       </span>
-                      {activeEpisode.airDate && (
+                      {!isMorningBrew && activeEpisode.airDate && (
                         <span className="font-mono text-[11px] text-neutral-400 flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           <span>{activeEpisode.airDate}</span>
@@ -138,7 +139,7 @@ export function ShowDetailView({
                     </div>
 
                     <h2 className="text-sm sm:text-base font-extrabold text-white leading-snug">
-                      {activeEpisode.title}
+                      {isMorningBrew ? (activeEpisode.description ? activeEpisode.title : '') : activeEpisode.title}
                     </h2>
 
                     <p className="text-xs text-neutral-300 leading-relaxed line-clamp-4">
@@ -251,7 +252,7 @@ export function ShowDetailView({
                       <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded shadow tracking-wider ${
                         isActive ? 'bg-red-600 text-white' : 'bg-black/80 text-white border border-white/20'
                       }`}>
-                        {idx === 0 ? 'LATEST • ' : ''}EPISODE {ep.episodeNumber}
+                        {idx === 0 ? 'LATEST • ' : ''}{isMorningBrew ? ep.title : `EPISODE ${ep.episodeNumber}`}
                       </span>
                       <span className="bg-black/80 backdrop-blur-xs text-blue-200 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-white/10">
                         {ep.duration}
@@ -270,7 +271,7 @@ export function ShowDetailView({
                       <h3 className="text-xs sm:text-sm font-extrabold text-white truncate drop-shadow-md">
                         {ep.title}
                       </h3>
-                      {ep.airDate && (
+                      {!isMorningBrew && ep.airDate && (
                         <span className="text-[11px] text-neutral-400 font-mono mt-0.5 block truncate">
                           {ep.airDate}
                         </span>
@@ -282,41 +283,6 @@ export function ShowDetailView({
             </div>
           </div>
         </section>
-
-        {/* 4. EXPLORE MORE SHOWS ROW */}
-        {otherShows && otherShows.length > 0 && (
-          <section className="pt-6 border-t border-white/10 space-y-4">
-            <h2 className="text-lg sm:text-xl font-black text-white">
-              Explore More Shows on ADC
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {otherShows.map((other) => (
-                <div
-                  key={other.id}
-                  onClick={() => {
-                    if (onSelectOtherShow) {
-                      onSelectOtherShow(other);
-                    }
-                  }}
-                  className="bg-[#101624] rounded-xl overflow-hidden border border-neutral-800 hover:border-neutral-600 hover:scale-[1.02] transition-all cursor-pointer shadow-lg group/other"
-                >
-                  <div className="aspect-[16/9] relative overflow-hidden bg-neutral-900">
-                    <img
-                      src={other.backdrop || other.image}
-                      alt={other.title}
-                      className="w-full h-full object-cover group-hover/other:scale-105 transition-transform duration-300"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-bold text-white text-xs truncate">{other.title}</h3>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
       </div>
 

@@ -7,12 +7,11 @@ import {
   Copy,
   ListVideo,
   Clock,
-  Film,
   Minimize2,
   Maximize2,
   Tv,
 } from 'lucide-react';
-import { getShowEpisodes, getOtherEpisodes } from '../data/episodesData';
+import { getShowEpisodes } from '../data/episodesData';
 import { onNowShows } from '../data/showsData';
 import { LiveStreamPlayer } from './LiveStreamPlayer';
 
@@ -53,7 +52,16 @@ export function MovieDetailModal({
     activeMovie?.isLive ||
     activeMovie?.isChannel ||
     activeMovie?.category === 'Live TV' ||
-    activeMovie?.duration === 'LIVE NOW'
+    activeMovie?.category === 'On Now' ||
+    activeMovie?.duration === 'LIVE NOW' ||
+    activeMovie?.channelName ||
+    activeMovie?.id?.startsWith('on-now-')
+  );
+
+  const isMorningBrew = Boolean(
+    (activeMovie?.title || '').toLowerCase().includes('morning brew') ||
+    (activeMovie?.id || '').toLowerCase().includes('morning-brew') ||
+    (activeMovie?.category || '').toLowerCase().includes('morning brew')
   );
 
   // Sync activeMovie whenever incoming movie prop changes
@@ -65,7 +73,10 @@ export function MovieDetailModal({
       movie?.isLive ||
       movie?.isChannel ||
       movie?.category === 'Live TV' ||
-      movie?.duration === 'LIVE NOW'
+      movie?.category === 'On Now' ||
+      movie?.duration === 'LIVE NOW' ||
+      movie?.channelName ||
+      movie?.id?.startsWith('on-now-')
     );
     setIsPlaying(shouldStartLive);
     if (shouldStartLive) {
@@ -101,11 +112,6 @@ export function MovieDetailModal({
     return getShowEpisodes(activeMovie);
   }, [activeMovie]);
 
-  // Compute other episodes with thumbnails from other shows
-  const otherEpisodes = useMemo(() => {
-    return getOtherEpisodes(activeMovie);
-  }, [activeMovie]);
-
   // Handle ESC key to close
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -132,20 +138,6 @@ export function MovieDetailModal({
 
   const handleClosePlayer = () => {
     setIsPlaying(false);
-  };
-
-  const handleSelectOtherEpisode = (otherItem) => {
-    const targetMovie = {
-      ...otherItem.movieData,
-      id: otherItem.movieData.id || `movie-${otherItem.id}`,
-      title: otherItem.showTitle,
-    };
-    setActiveMovie(targetMovie);
-    setActiveEpisode(otherItem);
-    setIsPlaying(true);
-    if (modalContainerRef.current) {
-      modalContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
   };
 
   const handleCopyLink = (url, epId) => {
@@ -298,7 +290,7 @@ export function MovieDetailModal({
 
                 <span className="bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded shadow uppercase flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  <span>{isLiveStream ? 'LIVE' : `Ep ${activeEpisode?.episodeNumber || 1}`}</span>
+                  <span>{isLiveStream ? 'LIVE' : isMorningBrew ? (activeEpisode?.title || 'Daily') : `Ep ${activeEpisode?.episodeNumber || 1}`}</span>
                 </span>
 
                 {isLiveStream && (
@@ -374,7 +366,7 @@ export function MovieDetailModal({
                   className="flex items-center justify-center gap-2 bg-white hover:bg-neutral-200 text-black font-bold px-5 sm:px-6 py-2.5 rounded-lg shadow-md transition-all active:scale-98 cursor-pointer min-h-[44px]"
                 >
                   <Play className="w-4 h-4 fill-current text-black" />
-                  <span>{isPlaying ? 'Now Playing Ep ' + (activeEpisode?.episodeNumber || 1) : 'Watch Episode 1'}</span>
+                  <span>{isPlaying ? (isMorningBrew ? 'Now Playing ' + (activeEpisode?.title || '') : 'Now Playing Ep ' + (activeEpisode?.episodeNumber || 1)) : (isMorningBrew ? 'Watch Latest Broadcast' : 'Watch Episode 1')}</span>
                 </button>
               ) : null}
             </div>
@@ -541,7 +533,7 @@ export function MovieDetailModal({
               {activeEpisode && isPlaying && (
                 <div className="text-xs text-red-400 sm:text-right font-bold flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <span>Now Playing: Ep {activeEpisode.episodeNumber}</span>
+                  <span>Now Playing: {isMorningBrew ? activeEpisode.title : `Ep ${activeEpisode.episodeNumber}`}</span>
                 </div>
               )}
             </div>
@@ -563,7 +555,7 @@ export function MovieDetailModal({
                     <div
                       onClick={() => handlePlayEpisode(ep)}
                       className="relative aspect-[16/9] w-full bg-neutral-900 overflow-hidden cursor-pointer group/thumb"
-                      title={`Click to play Episode ${ep.episodeNumber}: ${ep.title}`}
+                      title={isMorningBrew ? `Click to play ${ep.title}` : `Click to play Episode ${ep.episodeNumber}: ${ep.title}`}
                     >
                       <img
                         src={ep.image || activeMovie.backdrop || activeMovie.image}
@@ -588,7 +580,7 @@ export function MovieDetailModal({
                       </div>
 
                       <span className="absolute top-2 left-2 bg-black/85 text-white text-[11px] font-black px-2 py-0.5 rounded shadow border border-white/10">
-                        EP {ep.episodeNumber}
+                        {isMorningBrew ? ep.title : `EP ${ep.episodeNumber}`}
                       </span>
 
                       <span className="absolute bottom-2 right-2 bg-black/85 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1">
@@ -601,7 +593,7 @@ export function MovieDetailModal({
                       <div>
                         <div className="flex items-center justify-between gap-1 mb-1">
                           <span className="text-[10px] uppercase font-bold text-neutral-400">
-                            {ep.airDate || `Episode ${ep.episodeNumber}`}
+                            {isMorningBrew ? '' : (ep.airDate || `Episode ${ep.episodeNumber}`)}
                           </span>
                           {isCurrentlyPlaying && (
                             <span className="bg-red-600 text-white text-[8.5px] font-black uppercase px-1.5 py-0.5 rounded animate-pulse">
@@ -634,7 +626,7 @@ export function MovieDetailModal({
                           }`}
                         >
                           <Play className="w-3 h-3 fill-current" />
-                          <span>{isCurrentlyPlaying ? 'Playing' : 'Play Ep ' + ep.episodeNumber}</span>
+                          <span>{isCurrentlyPlaying ? 'Playing' : (isMorningBrew ? 'Play' : 'Play Ep ' + ep.episodeNumber)}</span>
                         </button>
 
                         {ep.youtubeUrl && (
@@ -671,104 +663,6 @@ export function MovieDetailModal({
               })}
             </div>
           </div>
-
-          {/* SECTION 2: EXPLORE OTHER EPISODES ACROSS ADC */}
-          {otherEpisodes && otherEpisodes.length > 0 && (
-            <div className="pt-6 border-t border-neutral-800 space-y-4">
-              <div>
-                <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                  <Film className="w-4 h-4 text-red-500" />
-                  <span>Explore Other Episodes Across ADC</span>
-                </h3>
-                <p className="text-xs text-neutral-400 mt-0.5">
-                  Click any thumbnail below to instantly load and play that episode
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {otherEpisodes.map((other) => (
-                  <div
-                    key={other.id}
-                    className="group relative rounded-xl border border-neutral-800 bg-neutral-950/80 hover:bg-neutral-900/60 hover:border-neutral-650 overflow-hidden transition-all duration-200 flex flex-col justify-between"
-                  >
-                    <div
-                      onClick={() => handleSelectOtherEpisode(other)}
-                      className="relative aspect-[16/9] w-full bg-neutral-900 overflow-hidden cursor-pointer group/otherThumb"
-                    >
-                      <img
-                        src={other.image}
-                        alt={other.title}
-                        className="w-full h-full object-cover object-center transition-transform duration-300 group-hover/otherThumb:scale-105"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = other.movieData?.image || '/images/hero/morning-brew-thumb.png';
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-black/40 group-hover/otherThumb:bg-black/20 flex items-center justify-center transition-colors">
-                        <div className="w-10 h-10 rounded-full bg-white/95 group-hover/otherThumb:bg-red-600 text-black group-hover/otherThumb:text-white flex items-center justify-center shadow-lg transition-transform group-hover/otherThumb:scale-110">
-                          <Play className="w-5 h-5 fill-current ml-0.5" />
-                        </div>
-                      </div>
-
-                      <span className="absolute top-2 left-2 bg-black/85 text-red-400 text-[10px] font-extrabold px-2 py-0.5 rounded shadow border border-white/10">
-                        {other.showTitle}
-                      </span>
-
-                      <span className="absolute bottom-2 right-2 bg-black/85 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-neutral-400" />
-                        <span>{other.duration}</span>
-                      </span>
-                    </div>
-
-                    <div className="p-3 sm:p-3.5 flex flex-col flex-1 justify-between gap-2.5">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-neutral-400">
-                          Episode {other.episodeNumber}
-                        </span>
-
-                        <h4
-                          onClick={() => handleSelectOtherEpisode(other)}
-                          className="text-xs sm:text-sm font-bold text-white group-hover:text-red-400 transition-colors line-clamp-1 cursor-pointer"
-                          title={other.title}
-                        >
-                          {other.title}
-                        </h4>
-
-                        <p className="text-[11px] sm:text-xs text-neutral-400 line-clamp-2 mt-1 leading-relaxed">
-                          {other.description}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-2 border-t border-neutral-800/80">
-                        <button
-                          type="button"
-                          onClick={() => handleSelectOtherEpisode(other)}
-                          className="flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold bg-white hover:bg-neutral-200 text-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-                        >
-                          <Play className="w-3 h-3 fill-current" />
-                          <span>Watch Episode</span>
-                        </button>
-
-                        {other.youtubeUrl && (
-                          <a
-                            href={other.youtubeUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="py-1.5 px-2.5 rounded-lg text-xs font-bold bg-neutral-900 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-700 hover:border-neutral-500 transition-all flex items-center justify-center gap-1 cursor-pointer"
-                            title={`Open direct link to ${other.title} in new tab`}
-                          >
-                            <span>Link</span>
-                            <ExternalLink className="w-3 h-3 text-neutral-400" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
           </>
         )}
         </div>
